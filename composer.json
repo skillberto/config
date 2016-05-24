@@ -1,0 +1,21 @@
+{
+  "name": "skillberto/config",
+  "license": "MIT",
+  "type": "library",
+  "description": "Symfony Config integration with some type of loaders",
+  "autoload": {
+    "psr-4": { "Skillberto\\Component\\Config\\": "" }
+  },
+  "require":{
+    "symfony/config": "~3.0",
+    "symfony/yaml": "~3.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "~4.0"
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "3.0.x-dev"
+    }
+  }
+}
