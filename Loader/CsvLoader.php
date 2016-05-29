@@ -5,24 +5,27 @@ namespace Skillberto\Component\Config\Loader;
 use Goodby\CSV\Import\Standard\Interpreter;
 use Goodby\CSV\Import\Standard\Lexer;
 use Goodby\CSV\Import\Standard\LexerConfig;
-use Symfony\Component\Config\Loader\FileLoader;
+use Skillberto\Component\Config\Cache\LoaderCacheInterface;
+use Skillberto\Component\Config\Util\LoadingHandlerInterface;
+use Symfony\Component\Config\FileLocatorInterface;
 
-class CsvLoader extends FileLoader implements CallbackLoaderInterface
+class CsvLoader extends TableLoader
 {
-    private $callback = null;
+    protected $lexerConfig = null;
+
+    protected $interpreter;
 
     /**
-     * Insert callback for interpreter
-     *
-     * @param callable $callback
-     *
-     * @return $this
+     * @param FileLocatorInterface         $locator
+     * @param LexerConfig|null             $lexerConfig
+     * @param LoadingHandlerInterface|null $loadingHandler
+     * @param LoaderCacheInterface|null    $loaderCacheInterface
      */
-    public function addCallback(\Closure $callback)
+    public function __construct(FileLocatorInterface $locator, LexerConfig $lexerConfig = null, LoadingHandlerInterface $loadingHandler = null, LoaderCacheInterface $loaderCacheInterface = null)
     {
-        $this->callback = $callback;
+        parent::__construct($locator, $loadingHandler, $loaderCacheInterface);
 
-        return $this;
+        $this->lexerConfig = $lexerConfig;
     }
 
     /**
@@ -30,20 +33,17 @@ class CsvLoader extends FileLoader implements CallbackLoaderInterface
      */
     public function load($resource, $type = null)
     {
-        $config = new LexerConfig();
-        $lexer = new Lexer($config);
+        $lexer = new Lexer($this->lexerConfig);
 
         $interpreter = new Interpreter();
 
-        $data = array();
-
-        $interpreter->addObserver($this->callback ?: function(array $columns) use (&$data) {
-            $data[] = $columns;
-        });
+        $interpreter->addObserver($this->getCallback());
 
         $lexer->parse($resource, $interpreter);
 
-        return $data;
+        $this->loaded = true;
+
+        return $this->getRows();
     }
 
     /**
